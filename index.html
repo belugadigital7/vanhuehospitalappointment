@@ -12,78 +12,106 @@
         input, select, textarea, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: none; font-size: 16px; box-sizing: border-box; }
         button { background: #00d4ff; color: #001f3f; font-weight: bold; cursor: pointer; }
         .summary-box { background: #f0f7ff; color: #333; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 5px solid #d50000; }
-        .otp-label { color: #ffab00; font-size: 12px; font-weight: bold; }
+        
+        /* POP-UP (MODAL) TICKET STYLES */
+        #modalOverlay { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; 
+        }
+        .modal-card { 
+            background: white; color: #333; padding: 25px; border-radius: 10px; 
+            width: 85%; max-width: 350px; text-align: center; border: 2px dashed #001f3f;
+        }
+        .token-circle {
+            width: 80px; height: 80px; background: #001f3f; color: #00d4ff;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 32px; font-weight: bold; margin: 10px auto;
+        }
+        .time-badge { 
+            font-size: 22px; font-weight: bold; color: #d50000; background: #fff5f5; 
+            padding: 8px 15px; border-radius: 5px; margin: 10px 0; display: inline-block; border: 1px solid #d50000;
+        }
+        .mrn-small { font-family: monospace; font-size: 14px; font-weight: bold; }
+
         table { width: 100%; border-collapse: collapse; background: white; color: #333; margin-top: 15px; font-size: 12px; }
         th, td { border: 1px solid #ddd; padding: 8px; }
         th { background: #00d4ff; }
-        .danger-btn { background: #ff4444; color: white; margin-top: 50px; font-size: 12px; }
+        @media print { body * { visibility: hidden; } #modalOverlay, #modalOverlay * { visibility: visible; } #modalOverlay { position: absolute; left: 0; top: 0; width: 100%; } button { display: none; } }
     </style>
 </head>
 <body>
+
+    <div id="modalOverlay">
+        <div class="modal-card" id="printableTicket">
+            <h3 style="margin:0; color:#001f3f;">VANHUE HOSPITAL</h3>
+            <p style="font-size:12px; margin:5px 0;">Digital Appointment Slip</p>
+            <div class="token-circle" id="popToken">#00</div>
+            <div class="time-badge" id="popTime">--:--</div>
+            <p style="margin:5px 0;"><strong>Doctor:</strong> <span id="popDoc"></span></p>
+            <p class="mrn-small">MRN: <span id="popMRN"></span></p>
+            <hr>
+            <button onclick="window.print()" style="background:#444; color:white; font-size:14px; padding:8px;">Print Ticket</button>
+            <button onclick="closeModal()" style="background:#00d4ff; color:#001f3f; font-size:14px; padding:8px;">Go to Exam</button>
+        </div>
+    </div>
 
     <div id="step1" class="slide active">
         <div class="card">
             <h2>Patient Registration</h2>
             <input type="text" id="pName" placeholder="Full Name">
             <input type="tel" id="pMobile" placeholder="Mobile Number">
-            <div class="otp-label">REG OTP: 1234</div>
+            <div style="color: #ffab00; font-size: 12px; font-weight: bold;">REG OTP: 1234</div>
             <input type="text" id="regOTP" placeholder="Enter OTP">
-            <button onclick="assignAppointment()">Verify & Generate MRN</button>
-            <button onclick="showSlide('admin')" style="background:#333; color:#ccc; margin-top:20px;">View Audit Dashboard</button>
+            <button onclick="assignAppointment()">Generate MRN & Token</button>
+            <button onclick="showSlide('admin')" style="background:#333; color:#ccc; margin-top:20px;">Audit Dashboard</button>
         </div>
     </div>
 
     <div id="step2" class="slide">
         <div class="card">
-            <h2>Trainee Entry</h2>
+            <h2>Trainee: Vitals</h2>
             <div class="summary-box">
-                <strong>MRN:</strong> <span id="dispMRN" style="color:red; font-weight:bold;"></span><br>
-                <span id="apptInfo"></span>
+                <strong>Patient:</strong> <span id="sumNameDisplay"></span><br>
+                <strong>MRN:</strong> <span id="dispMRN" style="color:red; font-weight:bold;"></span>
             </div>
-            <textarea id="pSymptoms" placeholder="Symptoms"></textarea>
-            <textarea id="pPhysExam" placeholder="Physical Exam"></textarea>
+            <textarea id="pSymptoms" placeholder="Chief Complaints"></textarea>
+            <textarea id="pPhysExam" placeholder="Physical Exam Findings"></textarea>
             <input type="text" id="pBP" placeholder="Blood Pressure">
-            <button onclick="showSlide('step3')">Send to Doctor</button>
+            <button onclick="showSlide('step3')">Submit to Doctor</button>
         </div>
     </div>
 
     <div id="step3" class="slide">
         <div class="card">
             <h2>Doctor Consultation</h2>
-            <textarea id="docFindings" placeholder="Diagnosis"></textarea>
+            <textarea id="docFindings" placeholder="Clinical Diagnosis"></textarea>
             <textarea id="docMeds" placeholder="Meds (e.g., Paracetamol 10)"></textarea>
-            <button onclick="prepPharmacy()">Finish Consultation</button>
+            <button onclick="prepPharmacy()">Send to Pharmacy</button>
         </div>
     </div>
 
     <div id="step4" class="slide">
         <div class="card">
-            <h2>Pharmacy: Med Release</h2>
+            <h2>Pharmacy Portal</h2>
             <div class="summary-box" id="pharmaReview"></div>
-            <div class="otp-label">RELEASE OTP: 9999</div>
-            <input type="text" id="dispenseOTP" placeholder="Enter Release OTP">
-            <button onclick="finalDispense()">Verify & Dispense</button>
+            <div style="color: #ffab00; font-size: 12px; font-weight: bold;">RELEASE OTP: 9999</div>
+            <input type="text" id="dispenseOTP" placeholder="Verify Release OTP">
+            <button onclick="finalDispense()">Confirm & Dispense</button>
         </div>
     </div>
 
     <div id="admin" class="slide">
         <div class="card" style="max-width:900px; background:white; color:#333;">
-            <h2 style="color:#001f3f">Hospital Audit Dashboard</h2>
-            <div id="auditContainer">
-                <h3>Medication Inventory Issued</h3>
-                <table id="medTable"><thead><tr><th>Medicine</th><th>Total Qty</th></tr></thead><tbody id="medBody"></tbody></table>
-                <h3>Doctor Performance</h3>
-                <table id="docTable"><thead><tr><th>Doctor</th><th>Patients</th><th>Meds Prescribed</th></tr></thead><tbody id="docBody"></tbody></table>
-            </div>
-            <button onclick="showSlide('step1')" style="margin-top:20px;">Back to Registration</button>
-            <button class="danger-btn" onclick="clearAllData()">Reset All Hospital Data (End of Day)</button>
+            <h2 style="color:#001f3f">Hospital Audit</h2>
+            <table id="medTable"><thead><tr><th>Medicine</th><th>Total Qty</th></tr></thead><tbody id="medBody"></tbody></table>
+            <table id="docTable"><thead><tr><th>Doctor</th><th>Patients</th><th>Meds Prescribed</th></tr></thead><tbody id="docBody"></tbody></table>
+            <button onclick="showSlide('step1')" style="margin-top:20px;">Back</button>
+            <button onclick="clearAllData()" style="background:#ff4444; color:white; font-size:12px;">Reset Data</button>
         </div>
     </div>
 
     <script>
         const doctors = ["Dr. Aryan", "Dr. Bhavna", "Dr. Chitra", "Dr. David", "Dr. Esha", "Dr. Farhan", "Dr. Gita", "Dr. Harsh", "Dr. Ishita", "Dr. Jatin"];
-        
-        // LOAD DATA FROM LOCAL STORAGE ON START
         let patientLog = JSON.parse(localStorage.getItem('patientLog')) || [];
         let inventory = JSON.parse(localStorage.getItem('inventory')) || {};
         const startTime = new Date(); startTime.setHours(9, 0, 0);
@@ -103,15 +131,28 @@
             if(document.getElementById('regOTP').value !== "1234") return alert("Invalid OTP");
             
             const mrn = "2026" + Math.floor(100000 + Math.random() * 900000);
+            const tokenNum = patientLog.length + 1;
             const docIdx = patientLog.length % 10;
             const roundNum = Math.floor(patientLog.length / 10);
             const apptTime = new Date(startTime.getTime() + (roundNum * 5 * 60000)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-            patientLog.push({ mrn, name: document.getElementById('pName').value, doc: doctors[docIdx], meds: "" });
+            patientLog.push({ mrn, name: document.getElementById('pName').value, doc: doctors[docIdx], meds: "", token: tokenNum });
             saveData();
             
+            // FILL POP-UP TICKET
+            document.getElementById('popToken').innerText = "#" + (tokenNum < 10 ? "0" + tokenNum : tokenNum);
+            document.getElementById('popMRN').innerText = mrn;
+            document.getElementById('popTime').innerText = apptTime;
+            document.getElementById('popDoc').innerText = doctors[docIdx];
+            document.getElementById('modalOverlay').style.display = 'flex';
+
+            // PREP NEXT SLIDE
+            document.getElementById('sumNameDisplay').innerText = document.getElementById('pName').value;
             document.getElementById('dispMRN').innerText = mrn;
-            document.getElementById('apptInfo').innerText = "Assigned: " + doctors[docIdx] + " @ " + apptTime;
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').style.display = 'none';
             showSlide('step2');
         }
 
@@ -121,17 +162,14 @@
             let record = patientLog.find(p => p.mrn === mrn);
             if(record) record.meds = meds;
             saveData();
-            
-            document.getElementById('pharmaReview').innerHTML = `<strong>MRN: ${mrn}</strong><br>Items: ${meds}`;
+            document.getElementById('pharmaReview').innerHTML = `<strong>Dispensing for MRN: ${mrn}</strong><hr>${meds}`;
             showSlide('step4');
         }
 
         function finalDispense() {
             if(document.getElementById('dispenseOTP').value !== "9999") return alert("Invalid OTP");
-            
             const mrn = document.getElementById('dispMRN').innerText;
             const record = patientLog.find(p => p.mrn === mrn);
-            
             if(record && record.meds) {
                 record.meds.split(',').forEach(item => {
                     const parts = item.trim().split(' ');
@@ -141,11 +179,7 @@
                 });
             }
             saveData();
-            alert("Medication Issued! Data Saved to Memory.");
-            resetForNextPatient();
-        }
-
-        function resetForNextPatient() {
+            alert("Medication Issued!");
             document.querySelectorAll('input, textarea').forEach(el => el.value = "");
             showSlide('step1');
         }
@@ -154,21 +188,16 @@
             const medBody = document.getElementById('medBody');
             medBody.innerHTML = '';
             for(let m in inventory) medBody.innerHTML += `<tr><td>${m}</td><td>${inventory[m]}</td></tr>`;
-
             const docBody = document.getElementById('docBody');
             docBody.innerHTML = '';
             doctors.forEach(d => {
                 const docPatients = patientLog.filter(p => p.doc === d);
-                const medsList = docPatients.map(p => p.meds).filter(m => m !== "").join(" | ");
-                docBody.innerHTML += `<tr><td>${d}</td><td>${docPatients.length}</td><td>${medsList || 'None'}</td></tr>`;
+                docBody.innerHTML += `<tr><td>${d}</td><td>${docPatients.length}</td><td>${docPatients.map(p => p.meds).join(" | ")}</td></tr>`;
             });
         }
 
         function clearAllData() {
-            if(confirm("Are you sure? This will delete all patient records for the day.")) {
-                localStorage.clear();
-                location.reload();
-            }
+            if(confirm("Wipe all daily records?")) { localStorage.clear(); location.reload(); }
         }
     </script>
 </body>
