@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Hospital Registration</title>
+    <title>Vanhue Hospital Registration</title>
     <link rel="manifest" href="manifest.json">
     <style>
         body { font-family: sans-serif; padding: 20px; max-width: 400px; margin: auto; background-color: #001f3f; color: white; }
@@ -13,15 +13,14 @@
         button:hover { background-color: #009624; }
         #resultCard { display: none; background: #ffffff; color: #001f3f; padding: 20px; text-align: center; border-radius: 8px; margin-top: 20px; }
         .token-number { font-size: 36px; font-weight: bold; color: #d50000; }
-</div>:
-<button onclick="location.reload()" style="background-color: #555; margin-top: 10px;">Register Another Patient</button>
+        .reset-btn { background-color: #555; margin-top: 15px; }
     </style>
 </head>
 <body>
 
-    <div class="card">
+    <div class="card" id="registrationSection">
         <h2>Patient Registration</h2>
-        <p>Fee: ₹5 | Generates Token & Doctor Assignment</p>
+        <p>Fee: ₹5 | Digital Token System</p>
         
         <form id="registrationForm">
             <label for="patientName">Full Name:</label>
@@ -49,10 +48,11 @@
         <div class="token-number" id="displayToken">--</div>
         <p>Please proceed to:</p>
         <h3 id="displayDoctor" style="color: #0056b3;">--</h3>
-        <p style="font-size: 12px; color: #666;">Present this screen at the pharmacy for OTP medicine pickup.</p>
+        <p style="font-size: 11px; color: #666;">Present this screen for pharmacy pickup.</p>
+        
+        <button class="reset-btn" onclick="window.location.reload()">Register New Patient</button>
     </div>
-</div>:
-<button onclick="location.reload()" style="background-color: #555; margin-top: 10px;">Register Another Patient</button>
+
     <script src="app.js"></script>
 </body>
 </html>
