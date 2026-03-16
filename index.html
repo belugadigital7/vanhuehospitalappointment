@@ -3,56 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vanhue Hospital Registration</title>
+    <title>Vanhue Hospital</title>
     <link rel="manifest" href="manifest.json">
     <style>
-        body { font-family: sans-serif; padding: 20px; max-width: 400px; margin: auto; background-color: #001f3f; color: white; }
-        .card { background: #003366; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
-        input, select, button { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; border-radius: 4px; border: none; }
-        button { background-color: #00c853; color: white; font-weight: bold; font-size: 16px; cursor: pointer; }
-        button:hover { background-color: #009624; }
-        #resultCard { display: none; background: #ffffff; color: #001f3f; padding: 20px; text-align: center; border-radius: 8px; margin-top: 20px; }
-        .token-number { font-size: 36px; font-weight: bold; color: #d50000; }
-        .reset-btn { background-color: #555; margin-top: 15px; }
+        /* PPT Slide Theme */
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: #001f3f; color: white; overflow: hidden; }
+        .slide { 
+            height: 100vh; width: 100vw; 
+            display: none; flex-direction: column; 
+            justify-content: center; align-items: center; 
+            text-align: center; padding: 20px; box-sizing: border-box;
+        }
+        .active { display: flex; } /* Shows the current "slide" */
+
+        /* Visual Elements */
+        .logo-img { width: 120px; margin-bottom: 20px; border-radius: 20px; }
+        .card { background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; width: 90%; max-width: 400px; }
+        input, select, button { width: 100%; padding: 15px; margin: 10px 0; border-radius: 8px; border: none; font-size: 16px; }
+        button { background-color: #00d4ff; color: #001f3f; font-weight: bold; cursor: pointer; }
+        .secondary-btn { background-color: #555; color: white; margin-top: 10px; }
+        
+        .token-val { font-size: 50px; color: #00ff88; font-weight: bold; margin: 20px 0; }
     </style>
 </head>
 <body>
 
-    <div class="card" id="registrationSection">
-        <h2>Patient Registration</h2>
-        <p>Fee: ₹5 | Digital Token System</p>
-        
-        <form id="registrationForm">
-            <label for="patientName">Full Name:</label>
-            <input type="text" id="patientName" required>
+    <div id="slide1" class="slide active">
+        <img src="icon.png" class="logo-img" alt="Vanhue Logo">
+        <h1>Vanhue Technologies</h1>
+        <p>Smart Hospital Portal</p>
+        <button onclick="nextSlide('slide1', 'slide2')">Start Registration</button>
+    </div>
 
-            <label for="mobile">Mobile Number:</label>
-            <input type="tel" id="mobile" pattern="[0-9]{10}" placeholder="10-digit number" required>
-
-            <label for="symptoms">Primary Symptom:</label>
-            <select id="symptoms" required>
-                <option value="">Select...</option>
-                <option value="Fever">Fever / Cold</option>
-                <option value="Pain">Body / Joint Pain</option>
-                <option value="Stomach">Stomach Issue</option>
-                <option value="Other">Other General</option>
+    <div id="slide2" class="slide">
+        <div class="card">
+            <h2>Patient Details</h2>
+            <input type="text" id="pName" placeholder="Full Name">
+            <input type="tel" id="pPhone" placeholder="Mobile Number">
+            <select id="pSymptom">
+                <option value="General">General Checkup</option>
+                <option value="Emergency">Emergency</option>
+                <option value="Pediatrics">Child Care</option>
             </select>
-
-            <button type="submit">Pay ₹5 & Generate Token</button>
-        </form>
+            <button onclick="generateToken()">Generate Token</button>
+            <button class="secondary-btn" onclick="nextSlide('slide2', 'slide1')">Back</button>
+        </div>
     </div>
 
-    <div id="resultCard">
-        <h3>Registration Successful!</h3>
-        <p>Your Token Number is:</p>
-        <div class="token-number" id="displayToken">--</div>
-        <p>Please proceed to:</p>
-        <h3 id="displayDoctor" style="color: #0056b3;">--</h3>
-        <p style="font-size: 11px; color: #666;">Present this screen for pharmacy pickup.</p>
-        
-        <button class="reset-btn" onclick="window.location.reload()">Register New Patient</button>
+    <div id="slide3" class="slide">
+        <div class="card">
+            <h2 style="color: #00ff88;">Confirmed!</h2>
+            <p>Your Token Number:</p>
+            <div class="token-val" id="tokenDisplay">VT-000</div>
+            <p id="docDisplay" style="font-weight: bold;">Dr. Sharma - Room 101</p>
+            <button onclick="window.print()">Print Slip</button>
+            <button class="secondary-btn" onclick="location.reload()">New Patient</button>
+        </div>
     </div>
 
-    <script src="app.js"></script>
+    <script>
+        function nextSlide(current, next) {
+            document.getElementById(current).classList.remove('active');
+            document.getElementById(next).classList.add('active');
+        }
+
+        function generateToken() {
+            const name = document.getElementById('pName').value;
+            if(!name) { alert("Please enter a name"); return; }
+            
+            const token = "VT-" + Math.floor(100 + Math.random() * 900);
+            document.getElementById('tokenDisplay').innerText = token;
+            nextSlide('slide2', 'slide3');
+        }
+    </script>
 </body>
 </html>
