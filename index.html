@@ -3,77 +3,172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vanhue Hospital</title>
+    <title>Vanhue Hospital HIS</title>
     <link rel="manifest" href="manifest.json">
     <style>
-        /* PPT Slide Theme */
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: #001f3f; color: white; overflow: hidden; }
-        .slide { 
-            height: 100vh; width: 100vw; 
-            display: none; flex-direction: column; 
-            justify-content: center; align-items: center; 
-            text-align: center; padding: 20px; box-sizing: border-box;
-        }
-        .active { display: flex; } /* Shows the current "slide" */
-
-        /* Visual Elements */
-        .logo-img { width: 120px; margin-bottom: 20px; border-radius: 20px; }
-        .card { background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; width: 90%; max-width: 400px; }
-        input, select, button { width: 100%; padding: 15px; margin: 10px 0; border-radius: 8px; border: none; font-size: 16px; }
-        button { background-color: #00d4ff; color: #001f3f; font-weight: bold; cursor: pointer; }
-        .secondary-btn { background-color: #555; color: white; margin-top: 10px; }
+        /* Global Styles */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #001f3f; color: white; line-height: 1.6; }
+        .slide { display: none; min-height: 100vh; flex-direction: column; align-items: center; padding: 20px; box-sizing: border-box; }
+        .active { display: flex; }
         
-        .token-val { font-size: 50px; color: #00ff88; font-weight: bold; margin: 20px 0; }
+        /* Card & UI Elements */
+        .card { background: rgba(255,255,255,0.1); padding: 25px; border-radius: 15px; width: 100%; max-width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); }
+        h2 { color: #00d4ff; margin-top: 0; text-align: center; }
+        label { display: block; margin-top: 15px; font-weight: bold; font-size: 14px; color: #88c0d0; }
+        
+        input, select, textarea, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: none; font-size: 16px; box-sizing: border-box; }
+        input, select, textarea { background: #e0e0e0; color: #333; }
+        textarea { height: 80px; resize: none; }
+        
+        button { background: #00d4ff; color: #001f3f; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 20px; }
+        button:hover { background: #00b8d4; transform: translateY(-2px); }
+        .secondary-btn { background: #555; color: white; }
+
+        /* Data Display */
+        .summary-box { background: #f0f7ff; color: #003366; padding: 15px; border-radius: 8px; margin: 15px 0; font-size: 14px; border-left: 5px solid #00d4ff; }
+        .mrn-text { font-size: 24px; font-weight: bold; color: #d50000; letter-spacing: 2px; text-align: center; display: block; margin: 10px 0; }
     </style>
 </head>
 <body>
 
-    <div id="slide1" class="slide active">
-        <img src="icon.png" class="logo-img" alt="Vanhue Logo">
-        <h1>Vanhue Technologies</h1>
-        <p>Smart Hospital Portal</p>
-        <button onclick="nextSlide('slide1', 'slide2')">Start Registration</button>
-    </div>
-
-    <div id="slide2" class="slide">
+    <div id="step1" class="slide active">
+        <img src="icon.png" style="width: 80px; border-radius: 15px; margin-bottom: 10px;" alt="Logo">
         <div class="card">
-            <h2>Patient Details</h2>
-            <input type="text" id="pName" placeholder="Full Name">
-            <input type="tel" id="pPhone" placeholder="Mobile Number">
-            <select id="pSymptom">
-                <option value="General">General Checkup</option>
-                <option value="Emergency">Emergency</option>
-                <option value="Pediatrics">Child Care</option>
+            <h2>Registration</h2>
+            <label>Patient Name</label>
+            <input type="text" id="pName" placeholder="Enter full name">
+            
+            <label>Gender</label>
+            <select id="pGender">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
             </select>
-            <button onclick="generateToken()">Generate Token</button>
-            <button class="secondary-btn" onclick="nextSlide('slide2', 'slide1')">Back</button>
+
+            <label>Mobile Number</label>
+            <input type="tel" id="pMobile" placeholder="10-digit mobile">
+            
+            <label>OTP Verification</label>
+            <input type="text" placeholder="Enter 4-digit OTP">
+
+            <button onclick="assignAppointment()">Register & Generate MRN</button>
         </div>
     </div>
 
-    <div id="slide3" class="slide">
+    <div id="step2" class="slide">
         <div class="card">
-            <h2 style="color: #00ff88;">Confirmed!</h2>
-            <p>Your Token Number:</p>
-            <div class="token-val" id="tokenDisplay">VT-000</div>
-            <p id="docDisplay" style="font-weight: bold;">Dr. Sharma - Room 101</p>
-            <button onclick="window.print()">Print Slip</button>
-            <button class="secondary-btn" onclick="location.reload()">New Patient</button>
+            <h2>Trainee Entry</h2>
+            <div class="summary-box">
+                <strong>Patient:</strong> <span id="regName"></span><br>
+                <strong>MRN:</strong> <span id="regMRN" style="color:red; font-weight:bold;"></span>
+            </div>
+            
+            <p id="apptInfo" style="text-align:center; font-weight:bold; color:#00ff88;"></p>
+
+            <label>Symptoms</label>
+            <textarea id="pSymptoms" placeholder="Patient complaints..."></textarea>
+            
+            <label>Physical Examination</label>
+            <textarea id="pPhysExam" placeholder="Heart rate, Respiration, Pallor..."></textarea>
+            
+            <label>Blood Pressure (BP)</label>
+            <input type="text" id="pBP" placeholder="e.g. 120/80">
+            
+            <button onclick="showSlide('step3')">Submit to Doctor</button>
+        </div>
+    </div>
+
+    <div id="step3" class="slide">
+        <div class="card">
+            <h2>Doctor Inspection</h2>
+            <div class="summary-box">
+                <strong>Vitals:</strong> <span id="docVitals"></span><br>
+                <strong>Symptoms:</strong> <span id="docSymptoms"></span>
+            </div>
+
+            <label>Clinical Findings</label>
+            <textarea id="docFindings" placeholder="Diagnosis and observations..."></textarea>
+            
+            <label>Medications</label>
+            <textarea id="docMeds" placeholder="List medicines and dosage..."></textarea>
+            
+            <button onclick="showSlide('step4')">Send to Pharmacy</button>
+        </div>
+    </div>
+
+    <div id="step4" class="slide">
+        <div class="card">
+            <h2>Pharmacy Portal</h2>
+            <label>Verify MRN</label>
+            <input type="text" id="verifyMRN" placeholder="Enter Patient MRN">
+            
+            <div class="summary-box" style="background: #fff;">
+                <strong>Medications to Give:</strong><br>
+                <span id="finalMeds"></span>
+            </div>
+
+            <label>Patient OTP (Medicine Release)</label>
+            <input type="text" placeholder="Confirm OTP for Meds">
+            
+            <button onclick="alert('Dispensed Successfully!'); location.reload();">Confirm & Close File</button>
+            <button class="secondary-btn" onclick="showSlide('step1')">Back to Home</button>
         </div>
     </div>
 
     <script>
-        function nextSlide(current, next) {
-            document.getElementById(current).classList.remove('active');
-            document.getElementById(next).classList.add('active');
+        // Data for 10 Doctors
+        const doctors = [
+            "Dr. Aryan", "Dr. Bhavna", "Dr. Chitra", "Dr. David", "Dr. Esha", 
+            "Dr. Farhan", "Dr. Gita", "Dr. Harsh", "Dr. Ishita", "Dr. Jatin"
+        ];
+
+        let patientTotal = 0; // Tracks total patients today
+        const startTime = new Date();
+        startTime.setHours(9, 0, 0); // Hospital opens at 9 AM
+
+        function showSlide(id) {
+            document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            
+            // Push data forward to next screens
+            if(id === 'step3') {
+                document.getElementById('docVitals').innerText = document.getElementById('pBP').value;
+                document.getElementById('docSymptoms').innerText = document.getElementById('pSymptoms').value;
+            }
+            if(id === 'step4') {
+                document.getElementById('finalMeds').innerText = document.getElementById('docMeds').value;
+                document.getElementById('verifyMRN').value = document.getElementById('regMRN').innerText;
+            }
         }
 
-        function generateToken() {
+        function assignAppointment() {
             const name = document.getElementById('pName').value;
-            if(!name) { alert("Please enter a name"); return; }
+            if(!name) return alert("Please enter patient name");
+
+            if(patientTotal >= 300) return alert("All 300 slots for today are full.");
+
+            // MRN: 10-digit starting with 2026
+            const mrn = "2026" + Math.floor(100000 + Math.random() * 900000);
             
-            const token = "VT-" + Math.floor(100 + Math.random() * 900);
-            document.getElementById('tokenDisplay').innerText = token;
-            nextSlide('slide2', 'slide3');
+            // Round Robin Logic: Find Doctor Index (0-9)
+            const docIdx = patientTotal % 10;
+            // Time Logic: Add 5 minutes for every round of 10
+            const roundNum = Math.floor(patientTotal / 10);
+            const apptTime = new Date(startTime.getTime() + (roundNum * 5 * 60000));
+            const timeStr = apptTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            // Set Data for Next Slides
+            document.getElementById('regName').innerText = name;
+            document.getElementById('regMRN').innerText = mrn;
+            document.getElementById('apptInfo').innerText = "Assigned: " + doctors[docIdx] + " at " + timeStr;
+
+            patientTotal++;
+            showSlide('step2');
+        }
+
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js');
         }
     </script>
 </body>
