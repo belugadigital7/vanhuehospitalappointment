@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Hospital Registration</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 400px; margin: auto; background-color: #001f3f; color: white; }
+        .card { background: #003366; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        input, select, button { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; border-radius: 4px; border: none; }
+        button { background-color: #00c853; color: white; font-weight: bold; font-size: 16px; cursor: pointer; }
+        button:hover { background-color: #009624; }
+        #resultCard { display: none; background: #ffffff; color: #001f3f; padding: 20px; text-align: center; border-radius: 8px; margin-top: 20px; }
+        .token-number { font-size: 36px; font-weight: bold; color: #d50000; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>Patient Registration</h2>
+        <p>Fee: ₹5 | Generates Token & Doctor Assignment</p>
+        
+        <form id="registrationForm">
+            <label for="patientName">Full Name:</label>
+            <input type="text" id="patientName" required>
+
+            <label for="mobile">Mobile Number:</label>
+            <input type="tel" id="mobile" pattern="[0-9]{10}" placeholder="10-digit number" required>
+
+            <label for="symptoms">Primary Symptom:</label>
+            <select id="symptoms" required>
+                <option value="">Select...</option>
+                <option value="Fever">Fever / Cold</option>
+                <option value="Pain">Body / Joint Pain</option>
+                <option value="Stomach">Stomach Issue</option>
+                <option value="Other">Other General</option>
+            </select>
+
+            <button type="submit">Pay ₹5 & Generate Token</button>
+        </form>
+    </div>
+
+    <div id="resultCard">
+        <h3>Registration Successful!</h3>
+        <p>Your Token Number is:</p>
+        <div class="token-number" id="displayToken">--</div>
+        <p>Please proceed to:</p>
+        <h3 id="displayDoctor" style="color: #0056b3;">--</h3>
+        <p style="font-size: 12px; color: #666;">Present this screen at the pharmacy for OTP medicine pickup.</p>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
