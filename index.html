@@ -3,140 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vanhue Hospital System</title>
+    <title>Vanhue Secure HIS</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #001f3f; color: white; }
         .slide { display: none; min-height: 100vh; flex-direction: column; align-items: center; padding: 20px; box-sizing: border-box; }
         .active { display: flex; }
-        .card { background: rgba(255,255,255,0.1); padding: 25px; border-radius: 15px; width: 100%; max-width: 480px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .card { background: rgba(255,255,255,0.1); padding: 25px; border-radius: 15px; width: 100%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         input, select, textarea, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: none; font-size: 16px; box-sizing: border-box; }
         button { background: #00d4ff; color: #001f3f; font-weight: bold; cursor: pointer; }
-        .summary-box { background: #f0f7ff; color: #333; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 5px solid #00d4ff; }
-        
-        /* Dashboard Table Styles */
-        table { width: 100%; border-collapse: collapse; background: white; color: #333; font-size: 12px; margin-top: 20px; border-radius: 8px; overflow: hidden; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background: #00d4ff; color: #001f3f; }
+        .summary-box { background: #f0f7ff; color: #333; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 5px solid #d50000; }
+        .otp-label { color: #ffab00; font-size: 12px; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; background: white; color: #333; margin-top: 15px; font-size: 12px; }
+        th, td { border: 1px solid #ddd; padding: 8px; }
+        th { background: #00d4ff; }
     </style>
 </head>
 <body>
 
     <div id="step1" class="slide active">
         <div class="card">
-            <h2>Hospital Registration</h2>
-            <input type="text" id="pName" placeholder="Patient Full Name">
-            <select id="pGender">
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-            </select>
-            <input type="tel" id="pMobile" placeholder="10-digit Mobile">
-            <button onclick="assignAppointment()">Register & Generate MRN</button>
-            <button onclick="showSlide('admin')" style="background:#333; color:#ccc; font-size:12px; margin-top:40px;">Open Supervisor Dashboard</button>
+            <h2>Patient Registration</h2>
+            <input type="text" id="pName" placeholder="Full Name">
+            <input type="tel" id="pMobile" placeholder="Mobile Number">
+            <div class="otp-label">SENT OTP: 1234 (For Demo)</div>
+            <input type="text" id="regOTP" placeholder="Enter Registration OTP">
+            <button onclick="assignAppointment()">Verify & Generate MRN</button>
+            <button onclick="showSlide('admin')" style="background:#333; color:#ccc; margin-top:20px;">View Audit Dashboard</button>
         </div>
     </div>
 
     <div id="step2" class="slide">
         <div class="card">
-            <h2>Trainee Entry</h2>
+            <h2>Trainee: Vitals & Exam</h2>
             <div class="summary-box">
-                <strong>MRN:</strong> <span id="regMRN" style="color:red; font-weight:bold;"></span><br>
-                <span id="apptInfo" style="font-weight:bold;"></span>
+                <strong>MRN:</strong> <span id="dispMRN" style="color:red; font-weight:bold;"></span><br>
+                <span id="apptInfo"></span>
             </div>
-            <textarea id="pSymptoms" placeholder="Symptoms..."></textarea>
-            <input type="text" id="pBP" placeholder="Blood Pressure (BP)">
+            <textarea id="pSymptoms" placeholder="Chief Symptoms"></textarea>
+            <textarea id="pPhysExam" placeholder="Physical Examination Findings"></textarea>
+            <input type="text" id="pBP" placeholder="Blood Pressure">
             <button onclick="showSlide('step3')">Send to Doctor</button>
         </div>
     </div>
 
     <div id="step3" class="slide">
         <div class="card">
-            <h2>Doctor Consultation</h2>
-            <textarea id="docFindings" placeholder="Doctor's Findings"></textarea>
-            <textarea id="docMeds" placeholder="Prescribed Medications"></textarea>
-            <button onclick="completeDocSession()">Send to Pharmacy</button>
+            <h2>Doctor: Consultation</h2>
+            <textarea id="docFindings" placeholder="Diagnosis/Findings"></textarea>
+            <textarea id="docMeds" placeholder="Meds (e.g., Paracetamol 10, Vit-C 5)"></textarea>
+            <button onclick="prepPharmacy()">Finish Consultation</button>
         </div>
     </div>
 
     <div id="step4" class="slide">
         <div class="card">
-            <h2>Pharmacy Portal</h2>
+            <h2>Pharmacy: Med Release</h2>
             <div class="summary-box" id="pharmaReview"></div>
-            <button onclick="alert('Dispensed Successfully!'); location.reload();">Confirm Release</button>
+            <div class="otp-label">RELEASING OTP: 9999 (For Demo)</div>
+            <input type="text" id="dispenseOTP" placeholder="Enter Release OTP from Patient">
+            <button onclick="finalDispense()">Verify OTP & Dispense</button>
         </div>
     </div>
 
     <div id="admin" class="slide">
-        <h2 style="color:white;">Supervisor View</h2>
-        <div style="width:100%; max-width:900px; overflow-x:auto;">
-            <table id="logTable">
-                <thead>
-                    <tr>
-                        <th>Time</th>
-                        <th>MRN</th>
-                        <th>Patient Name</th>
-                        <th>Assigned Doctor</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody id="logBody">
-                    </tbody>
-            </table>
+        <div class="card" style="max-width:900px; background:white; color:#333;">
+            <h2 style="color:#001f3f">Hospital Audit</h2>
+            <h3>Medication Totals</h3>
+            <table id="medTable"><thead><tr><th>Medicine</th><th>Total Qty</th></tr></thead><tbody id="medBody"></tbody></table>
+            <h3>Doctor Activity</h3>
+            <table id="docTable"><thead><tr><th>Doctor</th><th>Patients</th><th>Meds Prescribed</th></tr></thead><tbody id="docBody"></tbody></table>
+            <button onclick="showSlide('step1')" style="margin-top:20px;">Back to Registration</button>
         </div>
-        <button onclick="showSlide('step1')" style="max-width:200px; margin-top:20px;">Back to Registration</button>
     </div>
 
     <script>
         const doctors = ["Dr. Aryan", "Dr. Bhavna", "Dr. Chitra", "Dr. David", "Dr. Esha", "Dr. Farhan", "Dr. Gita", "Dr. Harsh", "Dr. Ishita", "Dr. Jatin"];
-        let patientLog = []; // Stores the day's records
-        const startTime = new Date();
-        startTime.setHours(9, 0, 0);
+        let patientLog = [];
+        let inventory = {};
+        const startTime = new Date(); startTime.setHours(9, 0, 0);
 
         function showSlide(id) {
             document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
-            if(id === 'admin') updateDashboard();
         }
 
         function assignAppointment() {
-            const name = document.getElementById('pName').value;
-            if(!name) return alert("Enter Name");
-
+            if(document.getElementById('regOTP').value !== "1234") return alert("Invalid Registration OTP");
+            
             const mrn = "2026" + Math.floor(100000 + Math.random() * 900000);
             const docIdx = patientLog.length % 10;
             const roundNum = Math.floor(patientLog.length / 10);
             const apptTime = new Date(startTime.getTime() + (roundNum * 5 * 60000)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-            // Save to Log
-            patientLog.push({ time: apptTime, mrn: mrn, name: name, doc: doctors[docIdx], status: "With Trainee" });
-
-            document.getElementById('regMRN').innerText = mrn;
+            patientLog.push({ mrn, name: document.getElementById('pName').value, doc: doctors[docIdx], meds: "" });
+            document.getElementById('dispMRN').innerText = mrn;
             document.getElementById('apptInfo').innerText = "Assigned: " + doctors[docIdx] + " @ " + apptTime;
             showSlide('step2');
         }
 
-        function completeDocSession() {
-            const currentMRN = document.getElementById('regMRN').innerText;
+        function prepPharmacy() {
             const meds = document.getElementById('docMeds').value;
+            const mrn = document.getElementById('dispMRN').innerText;
+            let record = patientLog.find(p => p.mrn === mrn);
+            if(record) record.meds = meds;
             
-            // Update Log
-            let record = patientLog.find(r => r.mrn === currentMRN);
-            if(record) record.status = "Ready at Pharmacy";
-
-            document.getElementById('pharmaReview').innerText = "Medications: " + meds;
+            document.getElementById('pharmaReview').innerHTML = `<strong>MRN: ${mrn}</strong><br>Items: ${meds}`;
             showSlide('step4');
         }
 
-        function updateDashboard() {
-            const body = document.getElementById('logBody');
-            body.innerHTML = '';
-            patientLog.forEach(row => {
-                body.innerHTML += `<tr>
-                    <td>${row.time}</td>
-                    <td>${row.mrn}</td>
-                    <td>${row.name}</td>
-                    <td>${row.doc}</td>
-                    <td><strong>${row.status}</strong></td>
-                </tr>`;
+        function finalDispense() {
+            if(document.getElementById('dispenseOTP').value !== "9999") return alert("Invalid Release OTP");
+            
+            const mrn = document.getElementById('dispMRN').innerText;
+            const record = patientLog.find(p => p.mrn === mrn);
+            
+            if(record && record.meds) {
+                record.meds.split(',').forEach(item => {
+                    const parts = item.trim().split(' ');
+                    const name = parts[0];
+                    const qty = parseInt(parts[1]) || 0;
+                    if(name) inventory[name] = (inventory[name] || 0) + qty;
+                });
+            }
+            updateAuditTables();
+            alert("Medication Issued & Recorded!");
+            location.reload();
+        }
+
+        function updateAuditTables() {
+            const medBody = document.getElementById('medBody');
+            medBody.innerHTML = '';
+            for(let m in inventory) medBody.innerHTML += `<tr><td>${m}</td><td>${inventory[m]}</td></tr>`;
+
+            const docBody = document.getElementById('docBody');
+            docBody.innerHTML = '';
+            doctors.forEach(d => {
+                const count = patientLog.filter(p => p.doc === d).length;
+                const meds = patientLog.filter(p => p.doc === d).map(p => p.meds).join(", ");
+                docBody.innerHTML += `<tr><td>${d}</td><td>${count}</td><td>${meds}</td></tr>`;
             });
         }
     </script>
