@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vanhue Secure HIS</title>
+    <title>Vanhue Secure HIS - Pro</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #001f3f; color: white; }
         .slide { display: none; min-height: 100vh; flex-direction: column; align-items: center; padding: 20px; box-sizing: border-box; }
@@ -16,6 +16,7 @@
         table { width: 100%; border-collapse: collapse; background: white; color: #333; margin-top: 15px; font-size: 12px; }
         th, td { border: 1px solid #ddd; padding: 8px; }
         th { background: #00d4ff; }
+        .danger-btn { background: #ff4444; color: white; margin-top: 50px; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -25,8 +26,8 @@
             <h2>Patient Registration</h2>
             <input type="text" id="pName" placeholder="Full Name">
             <input type="tel" id="pMobile" placeholder="Mobile Number">
-            <div class="otp-label">SENT OTP: 1234 (For Demo)</div>
-            <input type="text" id="regOTP" placeholder="Enter Registration OTP">
+            <div class="otp-label">REG OTP: 1234</div>
+            <input type="text" id="regOTP" placeholder="Enter OTP">
             <button onclick="assignAppointment()">Verify & Generate MRN</button>
             <button onclick="showSlide('admin')" style="background:#333; color:#ccc; margin-top:20px;">View Audit Dashboard</button>
         </div>
@@ -34,13 +35,13 @@
 
     <div id="step2" class="slide">
         <div class="card">
-            <h2>Trainee: Vitals & Exam</h2>
+            <h2>Trainee Entry</h2>
             <div class="summary-box">
                 <strong>MRN:</strong> <span id="dispMRN" style="color:red; font-weight:bold;"></span><br>
                 <span id="apptInfo"></span>
             </div>
-            <textarea id="pSymptoms" placeholder="Chief Symptoms"></textarea>
-            <textarea id="pPhysExam" placeholder="Physical Examination Findings"></textarea>
+            <textarea id="pSymptoms" placeholder="Symptoms"></textarea>
+            <textarea id="pPhysExam" placeholder="Physical Exam"></textarea>
             <input type="text" id="pBP" placeholder="Blood Pressure">
             <button onclick="showSlide('step3')">Send to Doctor</button>
         </div>
@@ -48,9 +49,9 @@
 
     <div id="step3" class="slide">
         <div class="card">
-            <h2>Doctor: Consultation</h2>
-            <textarea id="docFindings" placeholder="Diagnosis/Findings"></textarea>
-            <textarea id="docMeds" placeholder="Meds (e.g., Paracetamol 10, Vit-C 5)"></textarea>
+            <h2>Doctor Consultation</h2>
+            <textarea id="docFindings" placeholder="Diagnosis"></textarea>
+            <textarea id="docMeds" placeholder="Meds (e.g., Paracetamol 10)"></textarea>
             <button onclick="prepPharmacy()">Finish Consultation</button>
         </div>
     </div>
@@ -59,36 +60,47 @@
         <div class="card">
             <h2>Pharmacy: Med Release</h2>
             <div class="summary-box" id="pharmaReview"></div>
-            <div class="otp-label">RELEASING OTP: 9999 (For Demo)</div>
-            <input type="text" id="dispenseOTP" placeholder="Enter Release OTP from Patient">
-            <button onclick="finalDispense()">Verify OTP & Dispense</button>
+            <div class="otp-label">RELEASE OTP: 9999</div>
+            <input type="text" id="dispenseOTP" placeholder="Enter Release OTP">
+            <button onclick="finalDispense()">Verify & Dispense</button>
         </div>
     </div>
 
     <div id="admin" class="slide">
         <div class="card" style="max-width:900px; background:white; color:#333;">
-            <h2 style="color:#001f3f">Hospital Audit</h2>
-            <h3>Medication Totals</h3>
-            <table id="medTable"><thead><tr><th>Medicine</th><th>Total Qty</th></tr></thead><tbody id="medBody"></tbody></table>
-            <h3>Doctor Activity</h3>
-            <table id="docTable"><thead><tr><th>Doctor</th><th>Patients</th><th>Meds Prescribed</th></tr></thead><tbody id="docBody"></tbody></table>
+            <h2 style="color:#001f3f">Hospital Audit Dashboard</h2>
+            <div id="auditContainer">
+                <h3>Medication Inventory Issued</h3>
+                <table id="medTable"><thead><tr><th>Medicine</th><th>Total Qty</th></tr></thead><tbody id="medBody"></tbody></table>
+                <h3>Doctor Performance</h3>
+                <table id="docTable"><thead><tr><th>Doctor</th><th>Patients</th><th>Meds Prescribed</th></tr></thead><tbody id="docBody"></tbody></table>
+            </div>
             <button onclick="showSlide('step1')" style="margin-top:20px;">Back to Registration</button>
+            <button class="danger-btn" onclick="clearAllData()">Reset All Hospital Data (End of Day)</button>
         </div>
     </div>
 
     <script>
         const doctors = ["Dr. Aryan", "Dr. Bhavna", "Dr. Chitra", "Dr. David", "Dr. Esha", "Dr. Farhan", "Dr. Gita", "Dr. Harsh", "Dr. Ishita", "Dr. Jatin"];
-        let patientLog = [];
-        let inventory = {};
+        
+        // LOAD DATA FROM LOCAL STORAGE ON START
+        let patientLog = JSON.parse(localStorage.getItem('patientLog')) || [];
+        let inventory = JSON.parse(localStorage.getItem('inventory')) || {};
         const startTime = new Date(); startTime.setHours(9, 0, 0);
+
+        function saveData() {
+            localStorage.setItem('patientLog', JSON.stringify(patientLog));
+            localStorage.setItem('inventory', JSON.stringify(inventory));
+        }
 
         function showSlide(id) {
             document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
+            if(id === 'admin') updateAuditTables();
         }
 
         function assignAppointment() {
-            if(document.getElementById('regOTP').value !== "1234") return alert("Invalid Registration OTP");
+            if(document.getElementById('regOTP').value !== "1234") return alert("Invalid OTP");
             
             const mrn = "2026" + Math.floor(100000 + Math.random() * 900000);
             const docIdx = patientLog.length % 10;
@@ -96,6 +108,8 @@
             const apptTime = new Date(startTime.getTime() + (roundNum * 5 * 60000)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
             patientLog.push({ mrn, name: document.getElementById('pName').value, doc: doctors[docIdx], meds: "" });
+            saveData();
+            
             document.getElementById('dispMRN').innerText = mrn;
             document.getElementById('apptInfo').innerText = "Assigned: " + doctors[docIdx] + " @ " + apptTime;
             showSlide('step2');
@@ -106,13 +120,14 @@
             const mrn = document.getElementById('dispMRN').innerText;
             let record = patientLog.find(p => p.mrn === mrn);
             if(record) record.meds = meds;
+            saveData();
             
             document.getElementById('pharmaReview').innerHTML = `<strong>MRN: ${mrn}</strong><br>Items: ${meds}`;
             showSlide('step4');
         }
 
         function finalDispense() {
-            if(document.getElementById('dispenseOTP').value !== "9999") return alert("Invalid Release OTP");
+            if(document.getElementById('dispenseOTP').value !== "9999") return alert("Invalid OTP");
             
             const mrn = document.getElementById('dispMRN').innerText;
             const record = patientLog.find(p => p.mrn === mrn);
@@ -125,9 +140,14 @@
                     if(name) inventory[name] = (inventory[name] || 0) + qty;
                 });
             }
-            updateAuditTables();
-            alert("Medication Issued & Recorded!");
-            location.reload();
+            saveData();
+            alert("Medication Issued! Data Saved to Memory.");
+            resetForNextPatient();
+        }
+
+        function resetForNextPatient() {
+            document.querySelectorAll('input, textarea').forEach(el => el.value = "");
+            showSlide('step1');
         }
 
         function updateAuditTables() {
@@ -138,10 +158,17 @@
             const docBody = document.getElementById('docBody');
             docBody.innerHTML = '';
             doctors.forEach(d => {
-                const count = patientLog.filter(p => p.doc === d).length;
-                const meds = patientLog.filter(p => p.doc === d).map(p => p.meds).join(", ");
-                docBody.innerHTML += `<tr><td>${d}</td><td>${count}</td><td>${meds}</td></tr>`;
+                const docPatients = patientLog.filter(p => p.doc === d);
+                const medsList = docPatients.map(p => p.meds).filter(m => m !== "").join(" | ");
+                docBody.innerHTML += `<tr><td>${d}</td><td>${docPatients.length}</td><td>${medsList || 'None'}</td></tr>`;
             });
+        }
+
+        function clearAllData() {
+            if(confirm("Are you sure? This will delete all patient records for the day.")) {
+                localStorage.clear();
+                location.reload();
+            }
         }
     </script>
 </body>
