@@ -3,55 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vanhue Hospital HIS</title>
-    <link rel="manifest" href="manifest.json">
+    <title>Vanhue Hospital System</title>
     <style>
-        /* Global Styles */
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #001f3f; color: white; line-height: 1.6; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #001f3f; color: white; }
         .slide { display: none; min-height: 100vh; flex-direction: column; align-items: center; padding: 20px; box-sizing: border-box; }
         .active { display: flex; }
-        
-        /* Card & UI Elements */
-        .card { background: rgba(255,255,255,0.1); padding: 25px; border-radius: 15px; width: 100%; max-width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); }
-        h2 { color: #00d4ff; margin-top: 0; text-align: center; }
-        label { display: block; margin-top: 15px; font-weight: bold; font-size: 14px; color: #88c0d0; }
-        
+        .card { background: rgba(255,255,255,0.1); padding: 25px; border-radius: 15px; width: 100%; max-width: 480px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         input, select, textarea, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: none; font-size: 16px; box-sizing: border-box; }
-        input, select, textarea { background: #e0e0e0; color: #333; }
-        textarea { height: 80px; resize: none; }
+        button { background: #00d4ff; color: #001f3f; font-weight: bold; cursor: pointer; }
+        .summary-box { background: #f0f7ff; color: #333; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 5px solid #00d4ff; }
         
-        button { background: #00d4ff; color: #001f3f; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 20px; }
-        button:hover { background: #00b8d4; transform: translateY(-2px); }
-        .secondary-btn { background: #555; color: white; }
-
-        /* Data Display */
-        .summary-box { background: #f0f7ff; color: #003366; padding: 15px; border-radius: 8px; margin: 15px 0; font-size: 14px; border-left: 5px solid #00d4ff; }
-        .mrn-text { font-size: 24px; font-weight: bold; color: #d50000; letter-spacing: 2px; text-align: center; display: block; margin: 10px 0; }
+        /* Dashboard Table Styles */
+        table { width: 100%; border-collapse: collapse; background: white; color: #333; font-size: 12px; margin-top: 20px; border-radius: 8px; overflow: hidden; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #00d4ff; color: #001f3f; }
     </style>
 </head>
 <body>
 
     <div id="step1" class="slide active">
-        <img src="icon.png" style="width: 80px; border-radius: 15px; margin-bottom: 10px;" alt="Logo">
         <div class="card">
-            <h2>Registration</h2>
-            <label>Patient Name</label>
-            <input type="text" id="pName" placeholder="Enter full name">
-            
-            <label>Gender</label>
+            <h2>Hospital Registration</h2>
+            <input type="text" id="pName" placeholder="Patient Full Name">
             <select id="pGender">
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
-                <option value="Other">Other</option>
             </select>
-
-            <label>Mobile Number</label>
-            <input type="tel" id="pMobile" placeholder="10-digit mobile">
-            
-            <label>OTP Verification</label>
-            <input type="text" placeholder="Enter 4-digit OTP">
-
+            <input type="tel" id="pMobile" placeholder="10-digit Mobile">
             <button onclick="assignAppointment()">Register & Generate MRN</button>
+            <button onclick="showSlide('admin')" style="background:#333; color:#ccc; font-size:12px; margin-top:40px;">Open Supervisor Dashboard</button>
         </div>
     </div>
 
@@ -59,116 +39,105 @@
         <div class="card">
             <h2>Trainee Entry</h2>
             <div class="summary-box">
-                <strong>Patient:</strong> <span id="regName"></span><br>
-                <strong>MRN:</strong> <span id="regMRN" style="color:red; font-weight:bold;"></span>
+                <strong>MRN:</strong> <span id="regMRN" style="color:red; font-weight:bold;"></span><br>
+                <span id="apptInfo" style="font-weight:bold;"></span>
             </div>
-            
-            <p id="apptInfo" style="text-align:center; font-weight:bold; color:#00ff88;"></p>
-
-            <label>Symptoms</label>
-            <textarea id="pSymptoms" placeholder="Patient complaints..."></textarea>
-            
-            <label>Physical Examination</label>
-            <textarea id="pPhysExam" placeholder="Heart rate, Respiration, Pallor..."></textarea>
-            
-            <label>Blood Pressure (BP)</label>
-            <input type="text" id="pBP" placeholder="e.g. 120/80">
-            
-            <button onclick="showSlide('step3')">Submit to Doctor</button>
+            <textarea id="pSymptoms" placeholder="Symptoms..."></textarea>
+            <input type="text" id="pBP" placeholder="Blood Pressure (BP)">
+            <button onclick="showSlide('step3')">Send to Doctor</button>
         </div>
     </div>
 
     <div id="step3" class="slide">
         <div class="card">
-            <h2>Doctor Inspection</h2>
-            <div class="summary-box">
-                <strong>Vitals:</strong> <span id="docVitals"></span><br>
-                <strong>Symptoms:</strong> <span id="docSymptoms"></span>
-            </div>
-
-            <label>Clinical Findings</label>
-            <textarea id="docFindings" placeholder="Diagnosis and observations..."></textarea>
-            
-            <label>Medications</label>
-            <textarea id="docMeds" placeholder="List medicines and dosage..."></textarea>
-            
-            <button onclick="showSlide('step4')">Send to Pharmacy</button>
+            <h2>Doctor Consultation</h2>
+            <textarea id="docFindings" placeholder="Doctor's Findings"></textarea>
+            <textarea id="docMeds" placeholder="Prescribed Medications"></textarea>
+            <button onclick="completeDocSession()">Send to Pharmacy</button>
         </div>
     </div>
 
     <div id="step4" class="slide">
         <div class="card">
             <h2>Pharmacy Portal</h2>
-            <label>Verify MRN</label>
-            <input type="text" id="verifyMRN" placeholder="Enter Patient MRN">
-            
-            <div class="summary-box" style="background: #fff;">
-                <strong>Medications to Give:</strong><br>
-                <span id="finalMeds"></span>
-            </div>
-
-            <label>Patient OTP (Medicine Release)</label>
-            <input type="text" placeholder="Confirm OTP for Meds">
-            
-            <button onclick="alert('Dispensed Successfully!'); location.reload();">Confirm & Close File</button>
-            <button class="secondary-btn" onclick="showSlide('step1')">Back to Home</button>
+            <div class="summary-box" id="pharmaReview"></div>
+            <button onclick="alert('Dispensed Successfully!'); location.reload();">Confirm Release</button>
         </div>
     </div>
 
-    <script>
-        // Data for 10 Doctors
-        const doctors = [
-            "Dr. Aryan", "Dr. Bhavna", "Dr. Chitra", "Dr. David", "Dr. Esha", 
-            "Dr. Farhan", "Dr. Gita", "Dr. Harsh", "Dr. Ishita", "Dr. Jatin"
-        ];
+    <div id="admin" class="slide">
+        <h2 style="color:white;">Supervisor View</h2>
+        <div style="width:100%; max-width:900px; overflow-x:auto;">
+            <table id="logTable">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>MRN</th>
+                        <th>Patient Name</th>
+                        <th>Assigned Doctor</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="logBody">
+                    </tbody>
+            </table>
+        </div>
+        <button onclick="showSlide('step1')" style="max-width:200px; margin-top:20px;">Back to Registration</button>
+    </div>
 
-        let patientTotal = 0; // Tracks total patients today
+    <script>
+        const doctors = ["Dr. Aryan", "Dr. Bhavna", "Dr. Chitra", "Dr. David", "Dr. Esha", "Dr. Farhan", "Dr. Gita", "Dr. Harsh", "Dr. Ishita", "Dr. Jatin"];
+        let patientLog = []; // Stores the day's records
         const startTime = new Date();
-        startTime.setHours(9, 0, 0); // Hospital opens at 9 AM
+        startTime.setHours(9, 0, 0);
 
         function showSlide(id) {
             document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
-            
-            // Push data forward to next screens
-            if(id === 'step3') {
-                document.getElementById('docVitals').innerText = document.getElementById('pBP').value;
-                document.getElementById('docSymptoms').innerText = document.getElementById('pSymptoms').value;
-            }
-            if(id === 'step4') {
-                document.getElementById('finalMeds').innerText = document.getElementById('docMeds').value;
-                document.getElementById('verifyMRN').value = document.getElementById('regMRN').innerText;
-            }
+            if(id === 'admin') updateDashboard();
         }
 
         function assignAppointment() {
             const name = document.getElementById('pName').value;
-            if(!name) return alert("Please enter patient name");
+            if(!name) return alert("Enter Name");
 
-            if(patientTotal >= 300) return alert("All 300 slots for today are full.");
-
-            // MRN: 10-digit starting with 2026
             const mrn = "2026" + Math.floor(100000 + Math.random() * 900000);
-            
-            // Round Robin Logic: Find Doctor Index (0-9)
-            const docIdx = patientTotal % 10;
-            // Time Logic: Add 5 minutes for every round of 10
-            const roundNum = Math.floor(patientTotal / 10);
-            const apptTime = new Date(startTime.getTime() + (roundNum * 5 * 60000));
-            const timeStr = apptTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const docIdx = patientLog.length % 10;
+            const roundNum = Math.floor(patientLog.length / 10);
+            const apptTime = new Date(startTime.getTime() + (roundNum * 5 * 60000)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-            // Set Data for Next Slides
-            document.getElementById('regName').innerText = name;
+            // Save to Log
+            patientLog.push({ time: apptTime, mrn: mrn, name: name, doc: doctors[docIdx], status: "With Trainee" });
+
             document.getElementById('regMRN').innerText = mrn;
-            document.getElementById('apptInfo').innerText = "Assigned: " + doctors[docIdx] + " at " + timeStr;
-
-            patientTotal++;
+            document.getElementById('apptInfo').innerText = "Assigned: " + doctors[docIdx] + " @ " + apptTime;
             showSlide('step2');
         }
 
-        // Register Service Worker for PWA
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js');
+        function completeDocSession() {
+            const currentMRN = document.getElementById('regMRN').innerText;
+            const meds = document.getElementById('docMeds').value;
+            
+            // Update Log
+            let record = patientLog.find(r => r.mrn === currentMRN);
+            if(record) record.status = "Ready at Pharmacy";
+
+            document.getElementById('pharmaReview').innerText = "Medications: " + meds;
+            showSlide('step4');
+        }
+
+        function updateDashboard() {
+            const body = document.getElementById('logBody');
+            body.innerHTML = '';
+            patientLog.forEach(row => {
+                body.innerHTML += `<tr>
+                    <td>${row.time}</td>
+                    <td>${row.mrn}</td>
+                    <td>${row.name}</td>
+                    <td>${row.doc}</td>
+                    <td><strong>${row.status}</strong></td>
+                </tr>`;
+            });
         }
     </script>
 </body>
