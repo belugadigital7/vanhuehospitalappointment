@@ -3,81 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vanhue Health Regulatory System</title>
+    <title>Vanhue Secure HIS - Pro</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #001f3f; color: white; display: flex; flex-direction: column; min-height: 100vh; }
         .slide { display: none; flex: 1; flex-direction: column; align-items: center; padding: 20px; box-sizing: border-box; }
         .active { display: flex; }
-        .card { background: rgba(255,255,255,0.1); padding: 25px; border-radius: 15px; width: 100%; max-width: 550px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .card { background: rgba(255,255,255,0.1); padding: 25px; border-radius: 15px; width: 100%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         input, select, textarea, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: none; font-size: 16px; box-sizing: border-box; }
         button { background: #00d4ff; color: #001f3f; font-weight: bold; cursor: pointer; }
         .summary-box { background: #f0f7ff; color: #333; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 5px solid #d50000; }
         
-        /* Modal & Audit Styles */
-        #modalOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-card { background: white; color: #333; padding: 25px; border-radius: 10px; width: 85%; max-width: 350px; text-align: center; }
-        .fail-red { text-decoration: underline; color: #ff4444; font-weight: bold; }
+        #modalOverlay { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; 
+        }
+        .modal-card { 
+            background: white; color: #333; padding: 25px; border-radius: 10px; 
+            width: 85%; max-width: 350px; text-align: center; border: 2px dashed #001f3f;
+        }
+        .token-circle {
+            width: 80px; height: 80px; background: #001f3f; color: #00d4ff;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 32px; font-weight: bold; margin: 10px auto;
+        }
+        .time-badge { 
+            font-size: 22px; font-weight: bold; color: #d50000; background: #fff5f5; 
+            padding: 8px 15px; border-radius: 5px; margin: 10px 0; display: inline-block; border: 1px solid #d50000;
+        }
+        .mrn-small { font-family: monospace; font-size: 14px; font-weight: bold; }
+
         .pharmacy-alert { background: #fff3e0; border: 1px solid #ff9800; padding: 10px; color: #e65100; font-size: 14px; margin-top: 10px; border-radius: 5px; }
-        
+        .fail-red { text-decoration: underline; color: #ff4444 !important; font-weight: bold; }
+
         table { width: 100%; border-collapse: collapse; background: white; color: #333; margin-top: 15px; font-size: 12px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         th { background: #00d4ff; }
 
-        /* Footer Attribution */
         footer { text-align: center; padding: 15px; font-size: 13px; color: #88c0d0; background: rgba(0,0,0,0.2); border-top: 1px solid rgba(255,255,255,0.1); }
         .author-name { color: #00d4ff; font-weight: bold; }
+
+        @media print { body * { visibility: hidden; } #modalOverlay, #modalOverlay * { visibility: visible; } #modalOverlay { position: absolute; left: 0; top: 0; width: 100%; } button { display: none; } }
     </style>
 </head>
 <body>
 
     <div id="modalOverlay">
-        <div class="modal-card">
-            <h3 id="popTitle">Appointment Slip</h3>
-            <div id="popContent" style="margin: 15px 0;"></div>
-            <button onclick="closeModal()">Proceed to Exam</button>
+        <div class="modal-card" id="printableTicket">
+            <h3 style="margin:0; color:#001f3f;">VANHUE HOSPITAL</h3>
+            <p style="font-size:12px; margin:5px 0;">Digital Appointment Slip</p>
+            <div class="token-circle" id="popToken">#00</div>
+            <div class="time-badge" id="popTime">--:--</div>
+            <p style="margin:5px 0;"><strong>Doctor:</strong> <span id="popDoc"></span></p>
+            <p class="mrn-small">MRN: <span id="popMRN"></span></p>
+            <hr>
+            <button onclick="window.print()" style="background:#444; color:white; font-size:14px; padding:8px;">Print Ticket</button>
+            <button onclick="closeModal()" style="background:#00d4ff; color:#001f3f; font-size:14px; padding:8px;">Go to Exam</button>
         </div>
     </div>
 
     <div id="step1" class="slide active">
         <div class="card">
-            <h2>Vanhue HIS - Intake</h2>
-            <input type="text" id="pName" placeholder="Patient Full Name">
-            <input type="text" id="pMRN" placeholder="Enter MRN (if returning)">
-            <label style="font-size:12px">Return Visit? Symptoms same?</label>
+            <h2>Patient Registration</h2>
+            <input type="text" id="pName" placeholder="Full Name">
+            <input type="tel" id="pMobile" placeholder="Mobile Number">
+            <div style="color: #ffab00; font-size: 12px; font-weight: bold;">REG OTP: 1234</div>
+            <input type="text" id="regOTP" placeholder="Enter OTP">
+            <label style="font-size:12px">Return Visit with same symptoms?</label>
             <select id="symptomSame">
-                <option value="no">New Patient / Different Symptoms</option>
-                <option value="yes">Same Symptoms (Re-allot Doctor)</option>
+                <option value="no">No / First Visit</option>
+                <option value="yes">Yes (Re-allot Different Doctor)</option>
             </select>
-            <button onclick="assignAppointment()">Assign Doctor & Get Token</button>
-            <button onclick="openAudit()" style="background:#333; color:#ccc; margin-top:30px;">Regulatory Audit Portal</button>
+            <button onclick="assignAppointment()">Generate MRN & Token</button>
+            <button onclick="openAudit()" style="background:#333; color:#ccc; margin-top:20px;">Regulatory Audit Portal</button>
         </div>
     </div>
 
     <div id="step2" class="slide">
         <div class="card">
-            <h2>Trainee Vitals Entry</h2>
-            <div class="summary-box" id="traineeHeader"></div>
-            <textarea id="pSymptoms" placeholder="Symptoms & Complaints"></textarea>
-            <input type="text" id="pBP" placeholder="Blood Pressure / Heart Rate">
-            <button onclick="showSlide('step3')">Send to Doctor</button>
+            <h2>Trainee: Vitals & Exam</h2>
+            <div class="summary-box">
+                <strong>Patient:</strong> <span id="sumNameDisplay"></span><br>
+                <strong>MRN:</strong> <span id="dispMRN" style="color:red; font-weight:bold;"></span>
+            </div>
+            <textarea id="pSymptoms" placeholder="Symptoms (Trainee Entry)"></textarea>
+            <textarea id="pPhysExam" placeholder="Physical Exam (Trainee Entry)"></textarea>
+            <input type="text" id="pBP" placeholder="Blood Pressure / Vitals">
+            <button onclick="showSlide('step3')">Submit to Doctor</button>
         </div>
     </div>
 
     <div id="step3" class="slide">
         <div class="card">
-            <h2>Doctor Inspection</h2>
-            <label>Request Labs/Diagnostics?</label>
+            <h2>Doctor Consultation</h2>
+            <label>Request Labs (Starts new Token #1)?</label>
             <select id="diagRequest" onchange="generateDiagToken(this.value)">
                 <option value="">None</option>
-                <option value="X-Ray">X-Ray (Token #1...)</option>
-                <option value="Blood Test">Blood Test (Token #1...)</option>
-                <option value="Scan">Scanning (Token #1...)</option>
+                <option value="X-Ray">X-Ray</option>
+                <option value="Blood Test">Blood Test</option>
+                <option value="Scan">Scanning</option>
             </select>
+            <textarea id="docFindings" placeholder="Doctor's Inspection Findings"></textarea>
             <textarea id="docMeds" placeholder="Meds (e.g., Paracetamol 10, Mfg: Pharma-A)"></textarea>
-            <label>Previous Treatment Result</label>
+            <label>Drug Performance (for Audit)</label>
             <select id="drugEfficiency">
-                <option value="pass">Treatment Successful</option>
-                <option value="fail">Treatment Failed (Suspected Drug Fraud)</option>
+                <option value="pass">Treatment Worked</option>
+                <option value="fail">Treatment Failed (>5% Failure Flags Manufacturer)</option>
             </select>
             <button onclick="prepPharmacy()">Send to Pharmacy</button>
         </div>
@@ -85,9 +115,11 @@
 
     <div id="step4" class="slide">
         <div class="card">
-            <h2>Pharmacy Dispensing</h2>
-            <div class="pharmacy-alert">Prescription Received! Arranging medications now...</div>
+            <h2>Pharmacy Portal</h2>
+            <div class="pharmacy-alert">🚨 Prescription Received! Medicine being arranged...</div>
             <div class="summary-box" id="pharmaReview"></div>
+            <div style="color: #ffab00; font-size: 12px; font-weight: bold;">RELEASE OTP: 9999</div>
+            <input type="text" id="dispenseOTP" placeholder="Verify Release OTP">
             <button onclick="finalDispense()">Confirm MRN & Dispense</button>
         </div>
     </div>
@@ -95,12 +127,15 @@
     <div id="admin" class="slide">
         <div class="card" style="max-width:900px; background:white; color:#333;">
             <h2 style="color:#001f3f">Regulatory Audit Dashboard</h2>
-            <p style="font-size:12px; color:#666;">Manufacturers with >5% failure rate are underlined and flagged.</p>
+            <p style="font-size:11px; color:#666;">Manufacturers >5% fail rate are red-underlined for lab testing and fines.</p>
             <table id="auditTable">
-                <thead><tr><th>Manufacturer/Source</th><th>Patients Seen</th><th>Failure Rate (%)</th><th>Legal Action</th></tr></thead>
+                <thead><tr><th>Manufacturer</th><th>Patients Treated</th><th>Failure Rate (%)</th><th>Legal Action</th></tr></thead>
                 <tbody id="auditBody"></tbody>
             </table>
-            <button onclick="showSlide('step1')" style="margin-top:20px;">Exit Dashboard</button>
+            <table id="medTable"><thead><tr><th>Medicine Total Audit</th><th>Total Qty</th></tr></thead><tbody id="medBody"></tbody></table>
+            <table id="docTable"><thead><tr><th>Doctor</th><th>Total Patients</th><th>Prescriptions Issued</th></tr></thead><tbody id="docBody"></tbody></table>
+            <button onclick="showSlide('step1')" style="margin-top:20px;">Back</button>
+            <button onclick="clearAllData()" style="background:#ff4444; color:white; font-size:12px;">Reset Data</button>
         </div>
     </div>
 
@@ -111,91 +146,121 @@
 
     <script>
         const doctors = ["Dr. Aryan", "Dr. Bhavna", "Dr. Chitra", "Dr. David", "Dr. Esha", "Dr. Farhan", "Dr. Gita", "Dr. Harsh", "Dr. Ishita", "Dr. Jatin"];
-        let logs = JSON.parse(localStorage.getItem('vLog')) || [];
+        let patientLog = JSON.parse(localStorage.getItem('patientLog')) || [];
+        let inventory = JSON.parse(localStorage.getItem('inventory')) || {};
         let diagCounter = 0;
-        const startTime = new Date(); startTime.setHours(9,0,0);
+        const startTime = new Date(); startTime.setHours(9, 0, 0);
+
+        function saveData() {
+            localStorage.setItem('patientLog', JSON.stringify(patientLog));
+            localStorage.setItem('inventory', JSON.stringify(inventory));
+        }
 
         function showSlide(id) {
             document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
-            if(id === 'admin') runDrugAudit();
+            if(id === 'admin') updateAuditTables();
         }
 
         function assignAppointment() {
-            const isReturn = document.getElementById('symptomSame').value === "yes";
-            let mrn = document.getElementById('pMRN').value || ("2026" + Math.floor(100000+Math.random()*900000));
+            if(document.getElementById('regOTP').value !== "1234") return alert("Invalid OTP");
             
-            // Re-allot to a DIFFERENT doctor if symptoms same
-            let docIdx = logs.length % 10;
-            if(isReturn) docIdx = (docIdx + 2) % 10; 
+            const isReturn = document.getElementById('symptomSame').value === "yes";
+            const mrn = document.getElementById('pMRN').value || ("2026" + Math.floor(100000 + Math.random() * 900000));
+            const tokenNum = patientLog.length + 1;
+            
+            let docIdx = patientLog.length % 10;
+            if(isReturn) docIdx = (docIdx + 2) % 10; // Forced different doctor allotment
 
-            const round = Math.floor(logs.length / 10);
-            const time = new Date(startTime.getTime() + (round * 5 * 60000)).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            const roundNum = Math.floor(patientLog.length / 10);
+            const apptTime = new Date(startTime.getTime() + (roundNum * 5 * 60000)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-            logs.push({ mrn, name: document.getElementById('pName').value, doc: doctors[docIdx], time, meds: "", outcome: "pass" });
-            localStorage.setItem('vLog', JSON.stringify(logs));
-
-            document.getElementById('popContent').innerHTML = `<strong>Token #${logs.length}</strong><br>MRN: ${mrn}<br>Time Slot: ${time}<br>Allotted To: ${doctors[docIdx]}`;
+            patientLog.push({ mrn, name: document.getElementById('pName').value, doc: doctors[docIdx], meds: "", token: tokenNum, outcome: "pass" });
+            saveData();
+            
+            document.getElementById('popToken').innerText = "#" + (tokenNum < 10 ? "0" + tokenNum : tokenNum);
+            document.getElementById('popMRN').innerText = mrn;
+            document.getElementById('popTime').innerText = apptTime;
+            document.getElementById('popDoc').innerText = doctors[docIdx];
             document.getElementById('modalOverlay').style.display = 'flex';
-            document.getElementById('traineeHeader').innerText = `MRN: ${mrn} | Patient: ${document.getElementById('pName').value}`;
+
+            document.getElementById('sumNameDisplay').innerText = document.getElementById('pName').value;
+            document.getElementById('dispMRN').innerText = mrn;
         }
 
         function generateDiagToken(type) {
             if(!type) return;
             diagCounter++;
-            alert(`Diagnostic Request: ${type}\nToken Generated: #${diagCounter}\nPlease proceed to the Diagnostics Lab.`);
-        }
-
-        function prepPharmacy() {
-            const meds = document.getElementById('docMeds').value; 
-            const efficiency = document.getElementById('drugEfficiency').value;
-            logs[logs.length-1].meds = meds;
-            logs[logs.length-1].outcome = efficiency; 
-            localStorage.setItem('vLog', JSON.stringify(logs));
-            
-            document.getElementById('pharmaReview').innerHTML = `<strong>Dispensing for MRN: ${logs[logs.length-1].mrn}</strong><br>Prescription: ${meds}`;
-            showSlide('step4');
-        }
-
-        function finalDispense() {
-            alert("Medication Dispensed Successfully.");
-            document.querySelectorAll('input, textarea').forEach(e => e.value = "");
-            showSlide('step1');
-        }
-
-        function openAudit() {
-            const pass = prompt("Enter Supervisor Password:");
-            if(pass === "7887") showSlide('admin');
-            else alert("Invalid Password. Authorized Personnel Only.");
-        }
-
-        function runDrugAudit() {
-            const body = document.getElementById('auditBody');
-            body.innerHTML = '';
-            
-            const manufacturers = [
-                {name: "State Medical Corp", total: 120, fail: 4},
-                {name: "Astra-Vanhue Labs", total: 85, fail: 7}, // High failure
-                {name: "Zydus-Global", total: 200, fail: 2},
-                {name: "Generic-Supply-B", total: 50, fail: 6} // High failure
-            ];
-            
-            manufacturers.forEach(m => {
-                const rate = ((m.fail/m.total)*100).toFixed(1);
-                const isFailed = rate > 5.0;
-                body.innerHTML += `
-                    <tr>
-                        <td class="${isFailed ? 'fail-red' : ''}">${m.name}</td>
-                        <td>${m.total}</td>
-                        <td class="${isFailed ? 'fail-red' : ''}">${rate}%</td>
-                        <td>${isFailed ? 'FINE & CANCEL ORDER' : 'Active'}</td>
-                    </tr>`;
-            });
+            alert(`Diagnostic Request: ${type}\nLab Ticket Generated: #${diagCounter}\nPlease proceed to the Diagnostics Lab.`);
         }
 
         function closeModal() {
             document.getElementById('modalOverlay').style.display = 'none';
             showSlide('step2');
+        }
+
+        function prepPharmacy() {
+            const meds = document.getElementById('docMeds').value;
+            const efficiency = document.getElementById('drugEfficiency').value;
+            const mrn = document.getElementById('dispMRN').innerText;
+            let record = patientLog.find(p => p.mrn === mrn);
+            if(record) {
+                record.meds = meds;
+                record.outcome = efficiency;
+            }
+            saveData();
+            document.getElementById('pharmaReview').innerHTML = `<strong>Preparing for MRN: ${mrn}</strong><hr>Prescription: ${meds}`;
+            showSlide('step4');
+        }
+
+        function finalDispense() {
+            if(document.getElementById('dispenseOTP').value !== "9999") return alert("Invalid OTP");
+            const mrn = document.getElementById('dispMRN').innerText;
+            const record = patientLog.find(p => p.mrn === mrn);
+            if(record && record.meds) {
+                record.meds.split(',').forEach(item => {
+                    const parts = item.trim().split(' ');
+                    const name = parts[0];
+                    const qty = parseInt(parts[1]) || 0;
+                    if(name) inventory[name] = (inventory[name] || 0) + qty;
+                });
+            }
+            saveData();
+            alert("Medication Issued! Data Audited.");
+            document.querySelectorAll('input, textarea').forEach(el => el.value = "");
+            showSlide('step1');
+        }
+
+        function openAudit() {
+            if(prompt("Enter Supervisor Password:") === "7887") showSlide('admin');
+            else alert("Access Denied.");
+        }
+
+        function updateAuditTables() {
+            const auditBody = document.getElementById('auditBody');
+            auditBody.innerHTML = '';
+            // Simulated regulatory audit logic based on manufacturers
+            const mfgs = [{n: "State Medical Mfg", t: 150, f: 3}, {n: "Generic Supply Co", t: 60, f: 8}, {n: "Global Pharma", t: 90, f: 1}];
+            mfgs.forEach(m => {
+                const rate = ((m.f/m.t)*100).toFixed(1);
+                const isFail = rate > 5.0;
+                auditBody.innerHTML += `<tr><td class="${isFail ? 'fail-red' : ''}">${m.n}</td><td>${m.t}</td><td class="${isFail ? 'fail-red' : ''}">${rate}%</td><td>${isFail ? 'FINE & CANCEL ORDER' : 'Active'}</td></tr>`;
+            });
+
+            const medBody = document.getElementById('medBody');
+            medBody.innerHTML = '';
+            for(let m in inventory) medBody.innerHTML += `<tr><td>${m}</td><td>${inventory[m]}</td></tr>`;
+            
+            const docBody = document.getElementById('docBody');
+            docBody.innerHTML = '';
+            doctors.forEach(d => {
+                const docPats = patientLog.filter(p => p.doc === d);
+                docBody.innerHTML += `<tr><td>${d}</td><td>${docPats.length}</td><td>${docPats.map(p => p.meds).filter(m => m).join(" | ")}</td></tr>`;
+            });
+        }
+
+        function clearAllData() {
+            if(confirm("Confirm Wipe?")) { localStorage.clear(); location.reload(); }
         }
     </script>
 </body>
