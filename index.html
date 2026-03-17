@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vanhue Secure HIS - Pro</title>
+    <title>Vanhue Secure HIS - Althamash</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #001f3f; color: white; display: flex; flex-direction: column; min-height: 100vh; }
+        header { background: #001122; padding: 15px; text-align: center; border-bottom: 2px solid #00d4ff; }
         .slide { display: none; flex: 1; flex-direction: column; align-items: center; padding: 20px; box-sizing: border-box; }
         .active { display: flex; }
         .card { background: rgba(255,255,255,0.1); padding: 25px; border-radius: 15px; width: 100%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         input, select, textarea, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: none; font-size: 16px; box-sizing: border-box; }
         button { background: #00d4ff; color: #001f3f; font-weight: bold; cursor: pointer; }
         
-        /* TICKET POP-UP STYLES */
         #modalOverlay { 
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: rgba(0,0,0,0.95); z-index: 9999; justify-content: center; align-items: center; 
@@ -27,21 +27,24 @@
             font-size: 28px; font-weight: bold; margin: 10px auto;
         }
         .time-badge { font-size: 20px; font-weight: bold; color: #d50000; margin: 10px 0; display: block; }
-        
         .summary-box { background: #f0f7ff; color: #333; padding: 10px; border-radius: 8px; margin: 10px 0; border-left: 5px solid #d50000; }
         .fail-red { text-decoration: underline; color: #ff4444 !important; font-weight: bold; }
         table { width: 100%; border-collapse: collapse; background: white; color: #333; margin-top: 15px; font-size: 11px; }
         th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
         
-        footer { text-align: center; padding: 15px; font-size: 13px; color: #88c0d0; background: rgba(0,0,0,0.2); }
+        footer { text-align: center; padding: 15px; font-size: 13px; color: #88c0d0; background: rgba(0,0,0,0.2); margin-top: auto; cursor: pointer; }
     </style>
 </head>
 <body>
 
+    <header>
+        <h1 style="margin:0; font-size:22px; color:#00d4ff;">Althamash - Hospital Management System</h1>
+    </header>
+
     <div id="modalOverlay">
         <div class="modal-card">
             <h3 style="margin:0; color:#001f3f;">VANHUE HOSPITAL</h3>
-            <p style="font-size:12px;">Appointment Slip</p>
+            <p style="font-size:12px;" id="routingLabel">Standard Appointment</p>
             <div class="token-circle" id="popToken">#--</div>
             <div class="time-badge" id="popTime">--:--</div>
             <p><strong>Doctor:</strong> <span id="popDoc">--</span></p>
@@ -53,57 +56,59 @@
     <div id="step1" class="slide active">
         <div class="card">
             <h2>Patient Registration</h2>
-            <input type="text" id="pName" placeholder="Full Name">
+            <input type="text" id="pName" placeholder="Patient Name">
             <input type="tel" id="pMobile" placeholder="Mobile Number">
-            <div style="color: #ffab00; font-size: 12px; font-weight: bold;">REG OTP: 1234</div>
-            <input type="text" id="regOTP" placeholder="Enter OTP">
-            <label style="font-size:12px">Is this a Return Visit (Same Symptoms)?</label>
-            <select id="symptomSame">
-                <option value="no">No / New Patient</option>
-                <option value="yes">Yes (Assign New Doctor)</option>
+            <input type="text" id="regOTP" placeholder="Enter OTP (1234)">
+            
+            <label style="font-size:12px; margin-top:10px; display:block;">Visit Type:</label>
+            <select id="pType">
+                <option value="new">New Patient</option>
+                <option value="old_diff">Old Patient (New Symptoms)</option>
+                <option value="old_same">Old Patient (Same Symptoms)</option>
             </select>
+            
             <button onclick="assignAppointment()">Generate Ticket</button>
-            <button onclick="openAudit()" style="background:#333; color:#ccc; margin-top:20px;">Audit Dashboard (7887)</button>
         </div>
     </div>
 
     <div id="step2" class="slide">
         <div class="card">
-            <h2>Trainee Exam</h2>
+            <h2 id="traineeTitle">Trainee Exam</h2>
             <div class="summary-box">
                 <strong>Patient:</strong> <span id="sumName"></span><br>
                 <strong>MRN:</strong> <span id="dispMRN" style="color:red; font-weight:bold;"></span>
             </div>
-            <textarea id="pSymptoms" placeholder="Symptoms"></textarea>
-            <textarea id="pPhysExam" placeholder="Physical Examination"></textarea>
-            <input type="text" id="pBP" placeholder="Blood Pressure">
-            <button onclick="showSlide('step3')">Send to Doctor</button>
+            <textarea id="pSymptoms" placeholder="Symptoms (Trainee Entry)"></textarea>
+            <textarea id="pPhysExam" placeholder="Physical Exam (Trainee Entry)"></textarea>
+            <input type="text" id="pBP" placeholder="Vitals (BP/HR)">
+            <button onclick="showSlide('step3')">Send to Specialist</button>
         </div>
     </div>
 
     <div id="step3" class="slide">
         <div class="card">
-            <h2>Doctor Consultation</h2>
+            <h2>Specialist Consultation</h2>
             <select onchange="if(this.value) alert('Diagnostic Token #1 Issued for ' + this.value)">
-                <option value="">Request Labs/X-Ray?</option>
+                <option value="">Order Labs/Diagnostics?</option>
                 <option value="X-Ray">X-Ray</option>
                 <option value="Blood Test">Blood Test</option>
+                <option value="Scan">Scanning</option>
             </select>
-            <textarea id="docMeds" placeholder="Prescribe Meds (e.g. Paracetamol 10, Mfg: Pharma-A)"></textarea>
+            <textarea id="docFindings" placeholder="Doctor's Findings"></textarea>
+            <textarea id="docMeds" placeholder="Prescribed Meds (e.g. Paracetamol 10, Mfg: Pharma-A)"></textarea>
             <select id="drugEfficiency">
-                <option value="pass">Success</option>
-                <option value="fail">Failure (>5% Red Flag)</option>
+                <option value="pass">Treatment Worked</option>
+                <option value="fail">Treatment Failed (Regulatory Alert)</option>
             </select>
-            <button onclick="prepPharmacy()">Finalize Prescription</button>
+            <button onclick="prepPharmacy()">Send to Pharmacy</button>
         </div>
     </div>
 
     <div id="step4" class="slide">
         <div class="card">
-            <h2>Pharmacy Portal</h2>
-            <p style="color:#ffab00; text-align:center;">🚨 Meds being arranged...</p>
+            <h2>Pharmacy Dispatch</h2>
             <div class="summary-box" id="pharmaReview"></div>
-            <button onclick="alert('Dispensed Successfully!'); showSlide('step1')">Handover Meds</button>
+            <button onclick="alert('Dispensed Successfully!'); showSlide('step1')">Complete Session</button>
         </div>
     </div>
 
@@ -111,15 +116,16 @@
         <div class="card" style="max-width:900px; background:white; color:#333;">
             <h2>Drug Integrity Audit</h2>
             <table id="auditTable">
-                <thead><tr><th>Manufacturer</th><th>Treated</th><th>Failure Rate</th><th>Status</th></tr></thead>
+                <thead><tr><th>Manufacturer</th><th>Treated</th><th>Fail Rate</th><th>Status</th></tr></thead>
                 <tbody id="auditBody"></tbody>
             </table>
-            <button onclick="showSlide('step1')" style="margin-top:20px;">Back</button>
+            <button onclick="showSlide('step1')" style="margin-top:20px;">Exit Audit</button>
         </div>
     </div>
 
-    <footer>
-        Authors: <span style="color:#00d4ff; font-weight:bold;">Aarifa & Althamash</span> | Vanhue © 2026
+    <footer onclick="openAudit()">
+        Content Owners & Authors: <span style="color:#00d4ff; font-weight:bold;">Aarifa & Althamash</span><br>
+        Vanhue Technologies © 2026
     </footer>
 
     <script>
@@ -135,17 +141,14 @@
         function assignAppointment() {
             const name = document.getElementById('pName').value;
             const otp = document.getElementById('regOTP').value;
+            const visitType = document.getElementById('pType').value;
             
-            if(!name || otp !== "1234") {
-                alert("Please enter Name and correct OTP (1234)");
-                return;
-            }
+            if(!name || otp !== "1234") { alert("Enter Name and correct OTP"); return; }
 
-            // 1. GENERATE DATA
             const mrn = "2026" + Math.floor(100000 + Math.random() * 900000);
             const token = logs.length + 1;
             let docIdx = logs.length % 10;
-            if(document.getElementById('symptomSame').value === "yes") docIdx = (docIdx + 2) % 10;
+            if(visitType === 'old_same') docIdx = (docIdx + 3) % 10; 
 
             const time = new Date();
             time.setHours(9, (Math.floor(logs.length / 10) * 5), 0);
@@ -153,17 +156,12 @@
 
             logs.push({ mrn, name, doc: doctors[docIdx], outcome: 'pass' });
 
-            // 2. APPLY TO TICKET
             document.getElementById('popToken').innerText = "#" + (token < 10 ? "0"+token : token);
             document.getElementById('popTime').innerText = timeStr;
             document.getElementById('popDoc').innerText = doctors[docIdx];
             document.getElementById('popMRN').innerText = mrn;
-            
-            // 3. APPLY TO TRAINEE SLIDE
             document.getElementById('sumName').innerText = name;
             document.getElementById('dispMRN').innerText = mrn;
-
-            // 4. SHOW TICKET
             document.getElementById('modalOverlay').style.display = 'flex';
         }
 
@@ -173,20 +171,20 @@
         }
 
         function prepPharmacy() {
-            document.getElementById('pharmaReview').innerText = "Prescription: " + document.getElementById('docMeds').value;
+            document.getElementById('pharmaReview').innerText = "Meds: " + document.getElementById('docMeds').value;
             logs[logs.length-1].outcome = document.getElementById('drugEfficiency').value;
             showSlide('step4');
         }
 
         function openAudit() {
-            if(prompt("Enter Supervisor Password:") === "7887") showSlide('admin');
+            if(prompt("Supervisor Password Required:") === "7887") showSlide('admin');
         }
 
         function runAudit() {
             const body = document.getElementById('auditBody');
             body.innerHTML = `
-                <tr><td class="fail-red">Local Pharma-B (Fraud)</td><td>40</td><td class="fail-red">9.2%</td><td>FINED</td></tr>
-                <tr><td>Govt Generic Labs</td><td>150</td><td>1.2%</td><td>PASSED</td></tr>
+                <tr><td class="fail-red">Pharma-X (Failed)</td><td>45</td><td class="fail-red">8.2%</td><td>CANCEL</td></tr>
+                <tr><td>Govt Generic Labs</td><td>150</td><td>1.1%</td><td>PASS</td></tr>
             `;
         }
     </script>
