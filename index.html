@@ -13,8 +13,7 @@
         input, select, textarea, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: none; font-size: 16px; box-sizing: border-box; }
         button { background: #00d4ff; color: #001f3f; font-weight: bold; cursor: pointer; }
         
-        /* OVERLAYS */
-        #modalOverlay, #followupOverlay { 
+        #modalOverlay { 
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: rgba(0,0,0,0.95); z-index: 9999; justify-content: center; align-items: center; 
         }
@@ -29,7 +28,9 @@
         }
         .time-badge { font-size: 20px; font-weight: bold; color: #d50000; margin: 10px 0; display: block; }
         .summary-box { background: #f0f7ff; color: #333; padding: 10px; border-radius: 8px; margin: 10px 0; border-left: 5px solid #d50000; }
-        .status-alert { background: #fff3e0; padding: 10px; border-radius: 5px; color: #e65100; font-weight: bold; margin-bottom: 10px; border: 1px solid #ff9800;}
+        .fail-red { text-decoration: underline; color: #ff4444 !important; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; background: white; color: #333; margin-top: 15px; font-size: 11px; }
+        th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
         
         footer { text-align: center; padding: 15px; font-size: 13px; color: #88c0d0; background: rgba(0,0,0,0.2); margin-top: auto; cursor: pointer; }
     </style>
@@ -42,21 +43,12 @@
 
     <div id="modalOverlay">
         <div class="modal-card">
-            <h3 style="margin:0; color:#001f3f;">VANHUE TICKET</h3>
+            <h3 style="margin:0; color:#001f3f;">VANHUE HOSPITAL</h3>
             <div class="token-circle" id="popToken">#--</div>
             <div class="time-badge" id="popTime">--:--</div>
             <p><strong>Doctor:</strong> <span id="popDoc">--</span></p>
             <p style="font-size:12px;">MRN: <span id="popMRN">--</span></p>
             <button onclick="closeModal()">Proceed to Exam</button>
-        </div>
-    </div>
-
-    <div id="followupOverlay">
-        <div class="modal-card">
-            <h3 style="color:#001f3f;">Follow-up Choice</h3>
-            <p>Would the patient like to visit the <strong>Same Doctor</strong> or a <strong>Different Specialist</strong>?</p>
-            <button onclick="setDocChoice('same')">Same Doctor</button>
-            <button onclick="setDocChoice('new')" style="background:#001f3f; color:white;">Change Doctor</button>
         </div>
     </div>
 
@@ -67,34 +59,26 @@
             <input type="tel" id="pMobile" placeholder="Mobile Number">
             <input type="text" id="regOTP" placeholder="Enter OTP (1234)">
             
-            <label style="font-size:12px;">Patient Category:</label>
+            <label style="font-size:12px; margin-top:10px; display:block;">Visit Type:</label>
             <select id="pType">
                 <option value="new">New Patient</option>
-                <option value="old">Old Follow-up Patient</option>
+                <option value="old_diff">Old Patient (New Symptoms)</option>
+                <option value="old_same">Old Patient (Same Symptoms)</option>
             </select>
             
-            <button onclick="handleRegistration()">Process Appointment</button>
+            <button onclick="assignAppointment()">Generate Ticket</button>
         </div>
     </div>
 
     <div id="step2" class="slide">
         <div class="card">
-            <h2>Clinical Status Check</h2>
+            <h2>Trainee Exam</h2>
             <div class="summary-box">
                 <strong>Patient:</strong> <span id="sumName"></span><br>
                 <strong>MRN:</strong> <span id="dispMRN" style="color:red; font-weight:bold;"></span>
             </div>
-            
-            <label>Previous Treatment Status:</label>
-            <select id="symptomStatus">
-                <option value="resolved">Symptoms Resolved</option>
-                <option value="partial">Partially Better</option>
-                <option value="unresolved">Symptoms Still Persisting</option>
-                <option value="worse">Condition Worsened</option>
-            </select>
-
-            <textarea id="pSymptoms" placeholder="Current Chief Complaints"></textarea>
-            <textarea id="pPhysExam" placeholder="Physical Exam Findings"></textarea>
+            <textarea id="pSymptoms" placeholder="Symptoms (Trainee Entry)"></textarea>
+            <textarea id="pPhysExam" placeholder="Physical Exam (Trainee Entry)"></textarea>
             <input type="text" id="pBP" placeholder="Vitals (BP/HR)">
             <button onclick="showSlide('step3')">Send to Specialist</button>
         </div>
@@ -103,10 +87,18 @@
     <div id="step3" class="slide">
         <div class="card">
             <h2>Specialist Consultation</h2>
-            <div id="doctorAlert" class="status-alert" style="display:none;">⚠️ PATIENT REQUESTED CHANGE OF DOCTOR</div>
-            <textarea id="docFindings" placeholder="Doctor's Clinical Notes"></textarea>
-            <textarea id="docMeds" placeholder="Meds (e.g. Paracetamol 10, Mfg: Pharma-A)"></textarea>
-            <button onclick="prepPharmacy()">Finalize Prescription</button>
+            <select onchange="if(this.value) alert('Diagnostic Token #1 Issued for ' + this.value)">
+                <option value="">Order Labs/Diagnostics?</option>
+                <option value="X-Ray">X-Ray</option>
+                <option value="Blood Test">Blood Test</option>
+                <option value="Scan">Scanning</option>
+            </select>
+            <textarea id="docMeds" placeholder="Prescribed Meds (e.g. Paracetamol 10, Mfg: Pharma-A)"></textarea>
+            <select id="drugEfficiency">
+                <option value="pass">Treatment Worked</option>
+                <option value="fail">Treatment Failed (Regulatory Alert)</option>
+            </select>
+            <button onclick="prepPharmacy()">Send to Pharmacy</button>
         </div>
     </div>
 
@@ -114,7 +106,19 @@
         <div class="card">
             <h2>Pharmacy Dispatch</h2>
             <div class="summary-box" id="pharmaReview"></div>
-            <button onclick="alert('Dispensed Successfully!'); showSlide('step1')">End Session</button>
+            <button onclick="alert('Dispensed!'); showSlide('step1')">Complete Session</button>
+        </div>
+    </div>
+
+    <div id="admin" class="slide">
+        <div class="card" style="max-width:900px; background:white; color:#333;">
+            <h2>Drug Integrity Audit</h2>
+            <table id="auditTable">
+                <thead><tr><th>Manufacturer</th><th>Failure Rate</th><th>Status</th></tr></thead>
+                <tbody id="auditBody"></tbody>
+            </table>
+            <button onclick="showSlide('step1')" style="margin-top:20px;">Exit Audit</button>
+            <button onclick="localStorage.clear(); location.reload();" style="background:#ff4444; color:white; font-size:12px;">Clear All Hospital History</button>
         </div>
     </div>
 
@@ -125,13 +129,75 @@
 
     <script>
         const doctors = ["Dr. Aryan", "Dr. Bhavna", "Dr. Chitra", "Dr. David", "Dr. Esha", "Dr. Farhan", "Dr. Gita", "Dr. Harsh", "Dr. Ishita", "Dr. Jatin"];
-        let logs = [];
-        let currentChoice = 'standard';
+        let logs = JSON.parse(localStorage.getItem('althamashLog')) || [];
 
         function showSlide(id) {
             document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
+            if(id === 'admin') runAudit();
         }
 
-        function handleRegistration() {
+        function assignAppointment() {
             const name = document.getElementById('pName').value;
+            const otp = document.getElementById('regOTP').value;
+            
+            if(!name || otp !== "1234") { 
+                alert("Please enter Name and OTP (1234)"); 
+                return; 
+            }
+
+            const mrn = "2026" + Math.floor(100000 + Math.random() * 900000);
+            const token = logs.length + 1;
+            let docIdx = logs.length % 10;
+            
+            // Logic for returning patients
+            if(document.getElementById('pType').value === 'old_same') docIdx = (docIdx + 3) % 10;
+
+            const time = new Date();
+            time.setHours(9, (Math.floor(logs.length / 10) * 5), 0);
+            const timeStr = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            const newPatient = { mrn, name, doc: doctors[docIdx], outcome: 'pass' };
+            logs.push(newPatient);
+            localStorage.setItem('althamashLog', JSON.stringify(logs));
+
+            // Populate Ticket
+            document.getElementById('popToken').innerText = "#" + (token < 10 ? "0"+token : token);
+            document.getElementById('popTime').innerText = timeStr;
+            document.getElementById('popDoc').innerText = doctors[docIdx];
+            document.getElementById('popMRN').innerText = mrn;
+            
+            // Populate Background
+            document.getElementById('sumName').innerText = name;
+            document.getElementById('dispMRN').innerText = mrn;
+
+            // SHOW TICKET
+            document.getElementById('modalOverlay').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').style.display = 'none';
+            showSlide('step2');
+        }
+
+        function prepPharmacy() {
+            document.getElementById('pharmaReview').innerText = "Prescription: " + document.getElementById('docMeds').value;
+            logs[logs.length-1].outcome = document.getElementById('drugEfficiency').value;
+            localStorage.setItem('althamashLog', JSON.stringify(logs));
+            showSlide('step4');
+        }
+
+        function openAudit() {
+            if(prompt("Supervisor Password:") === "7887") showSlide('admin');
+        }
+
+        function runAudit() {
+            const body = document.getElementById('auditBody');
+            body.innerHTML = `
+                <tr><td class="fail-red">Pharma-X</td><td class="fail-red">8.2%</td><td>CANCEL</td></tr>
+                <tr><td>Govt Generic</td><td>1.1%</td><td>PASS</td></tr>
+            `;
+        }
+    </script>
+</body>
+</html>
